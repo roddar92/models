@@ -79,15 +79,16 @@ def translate_and_compute_bleu(model,
       params,
       subtokenizer,
       bleu_source,
-      output_file=tmp_filename,
+      output_file=bleu_ref,
       print_all_translations=False,
       distribution_strategy=distribution_strategy)
 
   # Compute uncased and cased bleu scores.
-  uncased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, False)
-  cased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, True)
-  os.remove(tmp_filename)
-  return uncased_score, cased_score
+  # uncased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, False)
+  # cased_score = compute_bleu.bleu_wrapper(bleu_ref, tmp_filename, True)
+  # os.remove(tmp_filename)
+  # return uncased_score, cased_score
+  return 0, 0
 
 
 def evaluate_and_log_bleu(model,
@@ -363,9 +364,14 @@ class TransformerTask(object):
     with distribution_utils.get_strategy_scope(distribution_strategy):
       if not self.predict_model:
         self.predict_model = transformer.create_model(self.params, False)
-      self._load_weights_if_possible(
-          self.predict_model,
-          tf.train.latest_checkpoint(self.flags_obj.model_dir))
+        opt = self._create_optimizer()
+        checkpoint = tf.train.Checkpoint(model=self.predict_model, optimizer=opt)
+        latest_checkpoint = tf.train.latest_checkpoint(self.flags_obj.model_dir)
+        if latest_checkpoint:
+            checkpoint.restore(latest_checkpoint)
+      # self._load_weights_if_possible(
+      #     self.predict_model,
+      #     tf.train.latest_checkpoint(self.flags_obj.model_dir))
       self.predict_model.summary()
     return evaluate_and_log_bleu(
         self.predict_model, self.params, self.flags_obj.bleu_source,
