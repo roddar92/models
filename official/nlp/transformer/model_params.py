@@ -51,7 +51,7 @@ BASE_PARAMS = defaultdict(
 
     # Default prediction params
     extra_decode_length=50,
-    beam_size=4,
+    beam_size=2,
     alpha=0.6,  # used to calculate length normalization in beam search
 
     # TPU specific parameters
